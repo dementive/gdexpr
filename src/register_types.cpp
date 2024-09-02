@@ -18,7 +18,7 @@ void initialize_gdexpr_module(ModuleInitializationLevel p_level) {
 	}
 
 	GDREGISTER_ABSTRACT_CLASS(GDExprBase)
-	GDREGISTER_ABSTRACT_CLASS(BaseGDExprScript)
+	GDREGISTER_CLASS(BaseGDExprScript)
 	GDREGISTER_CLASS(GDExpr)
 	GDREGISTER_CLASS(GDExprExampleNode)
 	GDREGISTER_CLASS(GDExprExampleScript)

@@ -8,8 +8,6 @@
 
 namespace gdexpr {
 
-#define ROOT get_tree()->get_root()->get_node<Galaxy>("Galaxy")
-
 #define GDSINGLETON(m_class)                                                                                                                                                  \
 	inline static m_class *singleton = nullptr;                                                                                                                               \
 	static m_class *get_singleton();                                                                                                                                          \

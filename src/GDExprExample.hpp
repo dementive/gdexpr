@@ -45,7 +45,7 @@ private:
 		Ref<GDExprExampleScript> script_context = memnew(GDExprExampleScript);
 
 		// GDExpr::execute_file returns an Array with the Variant results of every expression that was executed in the gdexpr file.
-		Array script_results = gdexpr_script->execute_file(expression_inputs, script_context, "res://scripts/test.gdexpr");
+		Array script_results = gdexpr_script->execute_file(expression_inputs, script_context, "res://demo/test.gdexpr");
 		for (int i = 0; i < script_results.size(); ++i) {
 			UtilityFunctions::print("RESULT: ", script_results[i]);
 		}

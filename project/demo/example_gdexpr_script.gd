@@ -1,8 +1,17 @@
 # Test GDExpr script.
 # This is an example of how to create your own GDExpr classes in gdscript with functions that can be called during the GDExpr runtime.
-
 extends BaseGDExprScript  # Note that you must inherit from BaseGDExprScript.
 class_name ExampleGDExprScript
+
+func run() -> void:
+
+	var expression_inputs: Array = Array()
+
+	var script_results: Array = GDExpr.execute_file(
+		expression_inputs, self, "res://demo/test.gdexpr"
+	)
+	for i in script_results:
+		print("Result: ", i)
 
 
 # NOTE: Functions run in GDExpr cannot return void, they must return a Variant value of some kind.
@@ -10,7 +19,8 @@ class_name ExampleGDExprScript
 # So always just return an int or some kind of number.
 # All functions declared in a gdexpr script will be available in gdexpr at runtime.
 func do_thing() -> int:
-	print("Hello GDScript!")
+	for i in range(50):
+		50 * 50
 	return 1
 
 
