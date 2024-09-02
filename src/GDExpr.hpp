@@ -222,6 +222,7 @@ private:
 		UtilityFunctions::print("COMPTIME EXPR RESULT: ", result);
 #endif
 
+		memdelete(expression);
 		return result;
 	}
 
@@ -257,6 +258,7 @@ private:
 			//UtilityFunctions::print("EXPR RESULT: ", result);
 #endif
 
+			memdelete(expression);
 			results.push_back(result);
 		}
 
