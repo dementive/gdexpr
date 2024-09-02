@@ -49,7 +49,7 @@ private:
 	uint64_t X_##m_thing_to_time##_start = Time::get_singleton()->get_ticks_usec();                                                                                           \
 	m_code;                                                                                                                                                                   \
 	uint64_t X_##m_thing_to_time##_end = Time::get_singleton()->get_ticks_usec();                                                                                             \
-	UtilityFunctions::print("Total time taken to execute ", #m_thing_to_time, ": ", ((X_##m_thing_to_time##_end - X_##m_thing_to_time##_start) / 1000000.0), " seconds");
+	UtilityFunctions::print("Total time taken to run ", #m_thing_to_time, ": ", ((X_##m_thing_to_time##_end - X_##m_thing_to_time##_start) / 1000000.0), " seconds");
 
 #define TIME_START(m_thing_to_time) uint64_t X_##m_thing_to_time##_start = Time::get_singleton()->get_ticks_usec();
 

@@ -204,6 +204,9 @@ private:
 
 	Variant comptime_execute(String expression_to_parse) {
 		// Execute an expression at comptime
+		// TODO - try to make a PR to godot to that makes it so a new Expression doesn't need to be memnewed for every new expression.
+		// This would be something like adding a new "reset" function to the Expression class that resets it's state to default.
+		// This is very slow, only having to do 1 malloc to evaluate all the expressions would be a massive improvement.
 		Expression *expression = memnew(Expression);
 
 		expression->parse(expression_to_parse);
@@ -229,6 +232,9 @@ private:
 
 		Array results;
 		for (int i = 0; i < compiled_expression.size(); ++i) {
+			// TODO - try to make a PR to godot to that makes it so a new Expression doesn't need to be memnewed for every new expression.
+			// This would be something like adding a new "reset" function to the Expression class that resets it's state to default.
+			// This is very slow, only having to do 1 malloc to evaluate all the expressions would be a massive improvement.
 			Expression *expression = memnew(Expression);
 			String expression_to_parse = compiled_expression[i];
 

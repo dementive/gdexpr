@@ -10,8 +10,6 @@ namespace gdexpr {
 // Test GDExpr script.
 // This is an example of how to create your own GDExpr classes in C++ with functions that can be called during the GDExpr runtime.
 // Note that you must inherit from BaseGDExprScript.
-#ifdef GDEXPR_COMPILER_DEBUG
-
 class GDExprExampleScript : public BaseGDExprScript {
 	GDCLASS(GDExprExampleScript, BaseGDExprScript)
 
@@ -35,21 +33,35 @@ public:
 	int do_thing_with_array(Array array_variable) { return array_variable.size() == 5; }
 };
 
-// This is an example of how you would execute a gdexpr file and print out the results of each expression executed.
-inline void test_gdexpr() {
-	GET_SINGLETON(GDExpr, gdexpr_script)
-	Array expression_inputs = Array();
-	Ref<GDExprExampleScript> script_context = memnew(GDExprExampleScript);
+// Node class that will run the gdexpr tests in the _ready function.
+class GDExprExampleNode : public Node {
+	GDCLASS(GDExprExampleNode, Node)
 
-	// GDExpr::execute_file returns an Array with the Variant results of every expression that was executed in the gdexpr file.
-	Array script_results = gdexpr_script->execute_file(expression_inputs, script_context, "res://scripts/test.gdexpr");
-	for (int i = 0; i < script_results.size(); ++i) {
-		UtilityFunctions::print("RESULT: ", script_results[i]);
+private:
+	// This is an example of how you would execute a gdexpr file and print out the results of each expression executed.
+	void test_gdexpr() {
+		GET_SINGLETON(GDExpr, gdexpr_script)
+		Array expression_inputs = Array();
+		Ref<GDExprExampleScript> script_context = memnew(GDExprExampleScript);
+
+		// GDExpr::execute_file returns an Array with the Variant results of every expression that was executed in the gdexpr file.
+		Array script_results = gdexpr_script->execute_file(expression_inputs, script_context, "res://scripts/test.gdexpr");
+		for (int i = 0; i < script_results.size(); ++i) {
+			UtilityFunctions::print("RESULT: ", script_results[i]);
+		}
 	}
+
+protected:
+	static void _bind_methods() {}
+
+public:
+	GDExprExampleNode() {}
+
+	void _ready() override {
+		test_gdexpr();
+	}
+};
+
 }
-
-#endif
-
-} //namespace gdexpr
 
 #endif
