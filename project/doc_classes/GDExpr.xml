@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="GDExpr" inherits="GDExprBase" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+		GDExpr singleton class.
+		GDExpr is a scripting language that works exactly the same as built in Godot Expressions except it has more syntax.
+
+		GDExpr compiles to Godot Expressions so all Godot Expression syntax is also valid in gdexpr.
+		This class exposes several methods to compile, interpret, and execute GDExpr.
+		Files with gdexpr in them, Strings with gdexpr code, or precompiled gdexpr code can all be compiled and executed from this class.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="execute">
+			<return type="Array" />
+			<param index="0" name="user_expression_inputs" type="Array" />
+			<param index="1" name="base_expression_instance" type="BaseGDExprScript" />
+			<param index="2" name="string_to_execute" type="String" />
+			<description>
+				Compiles a String with GDExpr code in it to a sequence of godot expressions and execute them.
+
+				Returns the results of each expression executed in an Array.
+			</description>
+		</method>
+		<method name="execute_file">
+			<return type="Array" />
+			<param index="0" name="user_expression_inputs" type="Array" />
+			<param index="1" name="base_expression_instance" type="BaseGDExprScript" />
+			<param index="2" name="user_file_to_compile" type="String" />
+			<description>
+				Compile a gdexpr file to a sequence of godot expressions and execute them.
+				Returns the results of each expression executed in an Array.
+			</description>
+		</method>
+		<method name="execute_precompiled_expressions">
+			<return type="Array" />
+			<param index="0" name="compiled_expression" type="PackedStringArray" />
+			<param index="1" name="string_to_execute" type="String" />
+			<description>
+				Execute a sequence of expressions that were precompiled with the static_compile function.
+
+				Returns the results of each expression executed in an Array.
+			</description>
+		</method>
+		<method name="sort_by_longest" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="a" type="String" />
+			<param index="1" name="b" type="String" />
+			<description>
+				Don't use this. It has to be public because it needs to be called from inside expressions.
+			</description>
+		</method>
+		<method name="static_compile">
+			<return type="PackedStringArray" />
+			<param index="0" name="user_expression_inputs" type="Array" />
+			<param index="1" name="base_expression_instance" type="BaseGDExprScript" />
+			<param index="2" name="user_file_to_compile" type="String" />
+			<description>
+				Statically compile a gdexpr file to a sequence of godot expressions but does not execute them. This works like a static compiler.
+
+				If your script does not need runtime data you should always statically compile as it will completely eliminate the compile time cost when running the expressions at
+				runtime.
+
+				Returns a PackedStringArray of godot expressions that are ready for execution with the execute_precompiled_expressions function.
+			</description>
+		</method>
+	</methods>
+</class>

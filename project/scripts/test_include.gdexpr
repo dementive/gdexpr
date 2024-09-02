@@ -1,0 +1,11 @@
+do_thing() + 90000
+
+---
+
+var test_included_variable = 20000
+
+---
+
+test_included_variable + 900
+
+---

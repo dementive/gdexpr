@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="BaseGDExprScript" inherits="GDExprBase" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+		Base GDExpr class that must be inherited by all of your gdexpr script classes.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_var">
+			<return type="Variant" />
+			<param index="0" name="_unnamed_arg0" type="String" />
+			<description>
+				This function is used to hack variables into gdexpr, [color=red]don't use this[/color].
+			</description>
+		</method>
+		<method name="set_var">
+			<return type="int" />
+			<param index="0" name="var_name" type="String" />
+			<param index="1" name="var_value" type="Variant" />
+			<description>
+				This function is used to hack variables into gdexpr, [color=red]don't use this[/color].
+			</description>
+		</method>
+	</methods>
+</class>

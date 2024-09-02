@@ -1,0 +1,22 @@
+[configuration]
+
+entry_symbol = "gdextension_init"
+compatibility_minimum = 4.2
+
+[libraries]
+
+macos.debug = "bin/libgdexpr.macos.debug.framework"
+macos.release = "bin/libgdexpr.macos.release.framework"
+windows.debug.x86_64 = "bin/libgdexpr.windows.debug.x86_64.dll"
+windows.release.x86_64 = "bin/libgdexpr.windows.release.x86_64.dll"
+linux.debug.x86_64 = "bin/libgdexpr.linux.debug.x86_64.so"
+linux.release.x86_64 = "bin/libgdexpr.linux.release.x86_64.so"
+linux.debug.arm64 = "bin/libgdexpr.linux.debug.arm64.so"
+linux.release.arm64 = "bin/libgdexpr.linux.release.arm64.so"
+linux.debug.rv64 = "bin/libgdexpr.linux.debug.rv64.so"
+linux.release.rv64 = "bin/libgdexpr.linux.release.rv64.so"
+
+[icons]
+
+GDExpr = "res://gfx/editor_icons/GDExpr.svg"
+BaseGDExprScript = "res://gfx/editor_icons/GDExpr.svg"

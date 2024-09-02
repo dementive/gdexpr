@@ -1,0 +1,28 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.0
+    hooks:
+      - id: ruff
+        args: [ --fix ]
+      - id: ruff-format
+  - repo: https://github.com/Scony/godot-gdscript-toolkit
+    rev: 4.2.2
+    hooks:
+      # - id: gdlint
+      #   additional_dependencies: [setuptools]
+      - id: gdformat
+        additional_dependencies: [setuptools]
+  - repo: local
+    hooks:
+      # - id: ruff-scons
+      #   name: ruff-scons
+      #   description: This hook runs ruff to check and format Scons python code.
+      #   entry: bash -c 'ruff check SConstruct --fix && ruff format SConstruct' # I couldn't find any other way to get ruff to check the SConstruct file :(
+      #   language: system
+      #   pass_filenames: false
+      - id: clang-format-run
+        name: clang-format
+        description: This hook runs clang-format to format code in the 'src' directory.
+        entry: bash -c 'find ./src/ \( -iname "*.hpp" -o -iname "*.cpp" \) -exec clang-format -i {} + && exit 0'
+        language: system
+        pass_filenames: false
