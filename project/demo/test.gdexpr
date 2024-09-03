@@ -246,9 +246,9 @@ if test_repeat_int < test_repeat_int_2
 	repeat +test_repeat_int
 endif
 
-print("Hey")
+print("HeyMom")
 ---
-prints("Hello", "World!")
+prints("Hello", "from", "GDExpr!")
 ---
 print(Vector2(1, 1)) # Note that the print functions return void, so they must be the only thing in the expression.
 ---

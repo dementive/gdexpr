@@ -57,6 +57,11 @@ protected:
 public:
 	GDExprBase() {}
 
+	// TODO - wrap @GlobalScope functions that return void , like print(), so they return an int.
+	// This will make it possible to evaluate these functions in a single expression instead of having to break into a new expression, which has quite a bit of runtime overhead.
+	// The problem is if any function returns void and then the "+" operator is used to concat them into the same expression the expression will always return this:
+	// ERROR: Invalid operands to operator +, Nil and Nil. Nil can't be added but if these returned ints it would be possible to add them, allowing for faster runtime expr execution.
+
 	// int gde_log(String string_to_print) {
 	// 	UtilityFunctions::print(string_to_print);
 	// 	return 1;
@@ -94,9 +99,26 @@ struct SortByLongest {
 
 class GDExpr : public GDExprBase {
 	GDCLASS(GDExpr, GDExprBase)
-	GDSINGLETON(GDExpr)
+
+public:
+	GDExpr() {
+		expression = memnew(Expression);
+		ERR_FAIL_COND(singleton != nullptr);
+		singleton = this;
+	}
+
+	~GDExpr() {
+		memdelete(expression);
+		expression = nullptr;
+		ERR_FAIL_COND(singleton != this);
+		singleton = nullptr;
+	}
 
 private:
+	inline static GDExpr *singleton = nullptr;
+	static GDExpr *get_singleton();
+
+	Expression *expression = nullptr;
 	Vector<String> variables;
 	Dictionary comptime_variables;
 	HashSet<String> current_includes;
@@ -126,6 +148,7 @@ private:
 
 		return expressions;
 	}
+
 	String parse_file(String file_path) {
 		Ref<FileAccess> file = FileAccess::open(file_path, FileAccess::READ);
 		ERR_FAIL_NULL_V(file, String());
@@ -204,10 +227,6 @@ private:
 
 	Variant comptime_execute(String expression_to_parse) {
 		// Execute an expression at comptime
-		// TODO - try to make a PR to godot to that makes it so a new Expression doesn't need to be memnewed for every new expression.
-		// This would be something like adding a new "reset" function to the Expression class that resets it's state to default.
-		// This is very slow, only having to do 1 malloc to evaluate all the expressions would be a massive improvement.
-		Expression *expression = memnew(Expression);
 
 		expression->parse(expression_to_parse);
 		Variant result = expression->execute(expression_inputs, *base_instance);
@@ -221,8 +240,6 @@ private:
 		UtilityFunctions::print("COMPTIME EXPR TO PARSE: ", expression_to_parse);
 		UtilityFunctions::print("COMPTIME EXPR RESULT: ", result);
 #endif
-
-		memdelete(expression);
 		return result;
 	}
 
@@ -233,10 +250,6 @@ private:
 
 		Array results;
 		for (int i = 0; i < compiled_expression.size(); ++i) {
-			// TODO - try to make a PR to godot to that makes it so a new Expression doesn't need to be memnewed for every new expression.
-			// This would be something like adding a new "reset" function to the Expression class that resets it's state to default.
-			// This is very slow, only having to do 1 malloc to evaluate all the expressions would be a massive improvement.
-			Expression *expression = memnew(Expression);
 			String expression_to_parse = compiled_expression[i];
 
 			expression->parse(expression_to_parse);
@@ -258,7 +271,6 @@ private:
 			//UtilityFunctions::print("EXPR RESULT: ", result);
 #endif
 
-			memdelete(expression);
 			results.push_back(result);
 		}
 
