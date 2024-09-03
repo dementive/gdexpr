@@ -1,25 +1,68 @@
 /*
-	GDExpr compiler
 
-	The "language" we are compiling to (Godot expressions) is extremely simple, it only has 5 operators (+,-,/,*,%), none of which have any special behavior the GDExpr
-   compiler has to care about. GDExpr is a superset of Godot expressions and is also extremely simple, having only has a few operators itself.
+MIT License
 
-	A great feature of Godot expressions do have is they will pretty much never cause crashes no matter how stupid the input you throw at it is, and sometimes it even
-   gives sensible error messages! Because of this the GDExpr compiler generally just does not care at all if the text it is compiling is actually valid, since the Godot
-   expressions compiler *should* handle all of this for us.
-   They also fully implement conditional logic and pretty much all the ways you can use it so GDExpr doesn't need to do this.
+Copyright (c) 2024 Dementive
 
-   Basic checks to ensure the compiler itself will never crash are still done...of course but ensuring the syntax we are compiling is actually valid isn't something this
-   compiler really worries about. Since the compiler also manages the runtime if the user makes syntax errors the compiler will notify what expressions failed, the file it
-   failed in and the error message the Godot expression compiler emitted.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-	Compiling to Godot expressions has a lot of...fun things to work around that a normal compiler would never have to worry about.
-	For example, the only possible way to properly implement if statement and loops was by doing all of it at compile time and introducing a "comptime" keyword that works kind
-   of like Zig comptime.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-	Because a lot of the normal features of a programming language are not actually possible to achieve in the compiled code a lot of these features have to somehow be
-   implemented by the compiler, at compile time. Then the compiled code has to somehow be assembled into a sequence of Godot expressions that are executed in the same way the
-   GDExpr syntax allows. So the compiler has to also do a lot of really weird stuff to work around these limitations.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+------------------------------------------------------------------------------
+
+GDExpr is a scripting language for Godot. This header file contains the compiler, interpreter, and runtime.
+The interface and most of the implementation of the language is in the GDExpr singleton class, which can be accessed from any GDExtension or gdscript.
+
+Unlike most sane languages that compile to bytecode or machine code GDExpr instead compiles to Godot expressions.
+Godot expressions are extremely simple, they only has 5 operators (+,-,/,*,%), none of which have any special behavior the GDExpr compiler has to care about.
+
+The killer feature of Godot expressions that made me want to compile to them is their ability to call any @GlobalScope functions or any function passed in on a object pointer.
+All you have to do is write 1 line of code to bind the function in C++. In gdscript you don't have to write any bindings at all, the functions bind automatically!
+This makes your C++ code considerably simpler than most other scripting solutions would...
+Compare this to creating function bindings from C->Lua: https://chsasank.com/lua-c-wrapping.html
+Additionally godot expressions natively support every Variant type and all operations on them out of the box...which means you can do pretty much anything with any type.
+They also fully implement conditional logic and pretty much all the ways you can use it.
+
+All of the features godot expressions have don't have to be implemented in GDExpr at all since godot expressions are able to handle this for us.
+This makes the languague implementation super simple in addition to having a simple API and gdexpr syntax also being...simple.
+
+Another great feature of Godot expressions have is they will pretty much never cause crashes no matter how stupid the input you throw at it is, and sometimes it even
+gives sensible error messages! Because of this the GDExpr compiler generally just does not care at all if the text it is compiling is actually valid, since the Godot
+expressions compiler *should* handle all of this for us. In my entire time writing this there hasn't been any input I could throw at it that caused a crash.
+
+Basic checks to ensure the compiler itself will never crash are still done...of course but ensuring the syntax we are compiling is actually valid isn't something this
+compiler really worries about.
+
+Since the compiler also manages the runtime if the user makes syntax errors the compiler will notify what expressions failed, the file it
+failed in and the error message the Godot expression compiler emitted.
+The big thing the compiler must ensure is that all gdexpr compiles to the exact equivalent sequence of godot expressions, otherwise this would be a pain to debug for the user
+
+Compiling to Godot expressions has a lot of...fun things to work around that a normal compiler would never have to worry about.
+
+For example, the only possible way to implement if statements and loops was by doing it at compile time and adding a "comptime" keyword that works kind of like Zig comptime.
+I would really prefer to not have to implement comptime because it is a complex concept for scripting language syntax
+but there is actually no other possible way to do ifs or loops that I could thin of.
+
+Also any function that returns void in the runtime will kill the execution of the current expression, preventing other subsequent statements from being run, which sucks.
+This isn't something the compiler can fix either, it can help mitigate some of the side effects of it, but the user still has to make their functions return valid Variants
+
+Because a lot of the normal features of a programming language are not actually possible to achieve in the compiled code a lot of these features have to somehow be
+implemented by the compiler, at compile time. Then the compiled code has to somehow be assembled into a sequence of Godot expressions that are executed in the same way the
+GDExpr syntax allows. So the compiler has to also do a lot of really weird stuff to work around these limitations.
 */
 
 #ifndef GDExpr_H
@@ -28,12 +71,11 @@
 #include "godot_cpp/classes/dir_access.hpp"
 #include "godot_cpp/classes/expression.hpp"
 #include "godot_cpp/classes/file_access.hpp"
+#include "godot_cpp/classes/time.hpp"
 #include "godot_cpp/templates/hash_set.hpp"
 #include "godot_cpp/variant/packed_string_array.hpp"
 #include "godot_cpp/variant/utility_functions.hpp"
 #include "godot_cpp/variant/variant.hpp"
-
-#include "Macros.hpp"
 
 using namespace godot;
 
@@ -42,8 +84,35 @@ namespace gdexpr {
 // NOTE: Uncomment this if debugging the compiler, it will compile with debugging and timing logging.
 //#define GDEXPR_COMPILER_DEBUG
 
-// Uncomment this to enable logging when debugging the comptime parts of the compiler.
+// NOTE: Uncomment this to enable logging when debugging the comptime parts of the compiler.
 //#define GDEXPR_COMPTIME_DEBUG
+
+// Measure execution time of m_code with a label m_thing_to_time in microseconds and print the result.
+#define TIME_MICRO(m_thing_to_time, m_code)                                                                                                                                   \
+	uint64_t X_##m_thing_to_time##_start = Time::get_singleton()->get_ticks_usec();                                                                                           \
+	m_code;                                                                                                                                                                   \
+	uint64_t X_##m_thing_to_time##_end = Time::get_singleton()->get_ticks_usec();                                                                                             \
+	UtilityFunctions::print("Total time taken to run ", #m_thing_to_time, ": ", (X_##m_thing_to_time##_end - X_##m_thing_to_time##_start), " microseconds");
+
+// Measure execution time of m_code with a label m_thing_to_time in seconds and print the result.
+#define TIME_SECONDS(m_thing_to_time, m_code)                                                                                                                                 \
+	uint64_t X_##m_thing_to_time##_start = Time::get_singleton()->get_ticks_usec();                                                                                           \
+	m_code;                                                                                                                                                                   \
+	uint64_t X_##m_thing_to_time##_end = Time::get_singleton()->get_ticks_usec();                                                                                             \
+	UtilityFunctions::print("Total time taken to run ", #m_thing_to_time, ": ", ((X_##m_thing_to_time##_end - X_##m_thing_to_time##_start) / 1000000.0), " seconds");
+
+// If m_code can't be passed into TIME_MICRO or TIME_SECONDS because it changes the control flow use this instead...
+#define TIME_START(m_thing_to_time) uint64_t X_##m_thing_to_time##_start = Time::get_singleton()->get_ticks_usec();
+
+// Call at the end of the code TIME_START is testing to measure time in microseconds.
+#define TIME_MICRO_END(m_thing_to_time)                                                                                                                                       \
+	uint64_t X_##m_thing_to_time##_end = Time::get_singleton()->get_ticks_usec();                                                                                             \
+	UtilityFunctions::print("Total time taken to run ", #m_thing_to_time, ": ", (X_##m_thing_to_time##_end - X_##m_thing_to_time##_start), " microseconds");
+
+// Call at the end of the code TIME_START is testing to measure time in seconds.
+#define TIME_SECONDS_END(m_thing_to_time)                                                                                                                                     \
+	uint64_t X_##m_thing_to_time##_end = Time::get_singleton()->get_ticks_usec();                                                                                             \
+	UtilityFunctions::print("Total time taken to run ", #m_thing_to_time, ": ", ((X_##m_thing_to_time##_end - X_##m_thing_to_time##_start) / 1000000.0), " seconds");
 
 // Functionality that needs to be shared between the runtime and the compiler so these functions can be run at either run time or comptime.
 class GDExprBase : public RefCounted {
@@ -58,9 +127,10 @@ public:
 	GDExprBase() {}
 
 	// TODO - wrap @GlobalScope functions that return void , like print(), so they return an int.
-	// This will make it possible to evaluate these functions in a single expression instead of having to break into a new expression, which has quite a bit of runtime overhead.
+	// This will make it possible to evaluate these functions in a single expression instead of having to break into a new expression, which has a lot of runtime overhead.
 	// The problem is if any function returns void and then the "+" operator is used to concat them into the same expression the expression will always return this:
-	// ERROR: Invalid operands to operator +, Nil and Nil. Nil can't be added but if these returned ints it would be possible to add them, allowing for faster runtime expr execution.
+	// ERROR: Invalid operands to operator + Nil and Nil. 
+	// Nil can't be added but if these returned ints it would be possible to add them, allowing for faster runtime expr execution.
 
 	// int gde_log(String string_to_print) {
 	// 	UtilityFunctions::print(string_to_print);
@@ -119,7 +189,9 @@ private:
 	static GDExpr *get_singleton();
 
 	Expression *expression = nullptr;
+	Ref<BaseGDExprScript> base_instance = nullptr;
 	Vector<String> variables;
+	// TODO OPTIMIZE - hash map is a shitty data structure for vars...cache misses galore...find something else with O(1)ish access...same with the one in the runtime.
 	Dictionary comptime_variables;
 	HashSet<String> current_includes;
 	String file_to_compile;
@@ -127,7 +199,6 @@ private:
 	bool is_inside_else_statement = false;
 	bool if_condition_passed = false;
 	Array expression_inputs;
-	Ref<BaseGDExprScript> base_instance = nullptr;
 
 	String parse_directory(String dir_path) {
 		Ref<DirAccess> dir = DirAccess::open(dir_path);
@@ -171,7 +242,7 @@ private:
 
 	String check_for_comptime_vars(String var_token) {
 		Array comptime_vars_keys = comptime_variables.keys();
-		comptime_vars_keys.sort_custom(Callable(this, "sort_by_longest"));
+		comptime_vars_keys.sort_custom(Callable(this, "sort_by_longest"));  // TODO OPTIMIZE - is it possible/faster to sort at insertion time???
 
 		for (int i = 0; i < comptime_vars_keys.size(); ++i) {
 			String variable = comptime_vars_keys[i];
@@ -208,7 +279,7 @@ private:
 		}
 
 		variables.append(variable_name);
-		variables.sort_custom<SortByLongest>();
+		variables.sort_custom<SortByLongest>(); // TODO OPTIMIZE - is it possible/faster to sort at insertion time???
 
 		String var_token = vformat("set_var(\"%s\", %s)+", variable_name, variable_value);
 		var_token = check_for_comptime_vars(var_token);
@@ -282,7 +353,7 @@ private:
 		return results;
 	}
 
-	// TODO - This is fast on smaller programs but if there are a ton of variables and 100,000+ lines of code to compile it can get slow...
+	// TODO OPTIMIZE - This is fast on smaller programs but if there are a ton of variables and 100,000+ lines of code to compile it can get slow...
 	// At a certain arbitrary point the algorithm should switch to parallel execution if the thread spawning + lock overhead will very likely be less than just compiling.
 	// This should be fairly straightforward to do since each expression is mostly evaluated independently and there are only a few shared memory resources like macro defines
 	// and variables. Load balancing will be easy since GDExpr is structured and sequential, each chunk can compile their own expressions and then they can be inserted into

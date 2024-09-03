@@ -1,6 +1,9 @@
 #ifndef GDExprTest_H
 #define GDExprTest_H
 
+#include "godot_cpp/classes/node.hpp"
+#include "godot_cpp/classes/engine.hpp"
+
 #include "GDExpr.hpp"
 
 using namespace godot;
@@ -40,7 +43,7 @@ class GDExprExampleNode : public Node {
 private:
 	// This is an example of how you would execute a gdexpr file and print out the results of each expression executed.
 	void test_gdexpr() {
-		GET_SINGLETON(GDExpr, gdexpr_script)
+		Ref<GDExpr> gdexpr_script = Ref<GDExpr>(Engine::get_singleton()->get_singleton("GDExpr"));
 		Array expression_inputs = Array();
 		Ref<GDExprExampleScript> script_context = memnew(GDExprExampleScript);
 
