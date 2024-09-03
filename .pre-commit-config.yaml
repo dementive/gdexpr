@@ -14,12 +14,12 @@ repos:
         additional_dependencies: [setuptools]
   - repo: local
     hooks:
-      # - id: ruff-scons
-      #   name: ruff-scons
-      #   description: This hook runs ruff to check and format Scons python code.
-      #   entry: bash -c 'ruff check SConstruct --fix && ruff format SConstruct' # I couldn't find any other way to get ruff to check the SConstruct file :(
-      #   language: system
-      #   pass_filenames: false
+      - id: ruff-scons
+        name: ruff-scons
+        description: This hook runs ruff to check and format Scons python code.
+        entry: bash -c 'ruff check SConstruct --fix && ruff format SConstruct' # I couldn't find any other way to get ruff to check the SConstruct file :(
+        language: system
+        pass_filenames: false
       - id: clang-format-run
         name: clang-format
         description: This hook runs clang-format to format code in the 'src' directory.

@@ -1,16 +1,24 @@
 #!/usr/bin/env python
+
+# ignore missing method errors...if you are reading this and know how to actually import Glob and Default from SCons please help me fix this...
+# ruff: noqa: F821
+
 from glob import glob
 from pathlib import Path
+from SCons.Script import SConscript
 
 env = SConscript("godot-cpp/SConstruct")
 
 # Add source files.
 env.Append(CPPPATH=["src/"])
-sources = Glob("src/*.cpp")
+sources = Glob("src/*.cpp")  # type: ignore
 
 if env["target"] in ["editor", "template_debug"]:
     try:
-        doc_data = env.GodotCPPDocData("src/gen/doc_data.gen.cpp", source=Glob("doc_classes/*.xml"))
+        doc_data = env.GodotCPPDocData(
+            "src/gen/doc_data.gen.cpp",
+            source=Glob("doc_classes/*.xml"),  # type: ignore
+        )
         sources.append(doc_data)
     except AttributeError:
         print("Not including class reference as we're targeting a pre-4.3 baseline.")
@@ -49,4 +57,4 @@ else:
         source=sources,
     )
 
-Default(library)
+Default(library)  # type: ignore
