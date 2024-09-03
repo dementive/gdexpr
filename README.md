@@ -62,10 +62,18 @@ GDExpr is a [structured](https://en.wikipedia.org/wiki/Structured_program_theore
 Unlike most sane languages that compile to bytecode or machine code GDExpr instead compiles to Godot expressions. Which kind of sucks in some ways but is totally awesome in more ways than it sucks.
 
 The killer feature of Godot expressions that made me want to compile to them is their ability to call any @GlobalScope functions or any function passed in on a object pointer.
+
+
 All you have to do is write 1 line of code to bind the function in C++. In GDscript you don't have to write any bindings at all, the functions bind automatically!
+
+
 This makes your C++ code considerably simpler than most other scripting solutions would...
 Compare this to creating function bindings from C->Lua: https://chsasank.com/lua-c-wrapping.html
+
+
 Additionally Godot expressions natively support every Variant type and all operations on them out of the box...which means you can do pretty much anything with any type.
+
+
 They also fully implement conditional logic and pretty much all the ways you can use it.
 
 All of the features Godot expressions have don't have to be implemented in GDExpr at all since godot expressions are able to handle them.
@@ -88,7 +96,7 @@ Modern games are often developed using 2 different programming languages. A low 
 
 In Godot the main scripting language is GDscript, but I personally hate GDscript, I think it has way too much syntax sugar and is very difficult to work with from a C++ perspective. I am writing my game entirely with GDExtension C++, using GDscript as the main scripting language in this context feels very awkward due to the way Godot "scripts" must be tied to a node in the scene tree. This really makes no sense from a C++ perspective as many of my scripts have absolutely nothing to do with nodes or the scene tree at all and some of them are purely application configuration.
 
-So what are my exact requirements for a "scripting" language is this context of my extremely specific use case?
+So what are my exact requirements for a "scripting" language the context of my extremely specific use case?
 
 In my mind the ideal scripting language would have all of these things:
 
@@ -110,7 +118,7 @@ In my mind the ideal scripting language would have all of these things:
 
 9. Good Debugging - Content designers will likely constantly be scripting bugs and the scripting language should be simple enough to allow them to debug most problems without help from people whose time is considerably more expensive.
 
-10. Safe - It should be impossible for a scripting language to crash the application. GDExpr is designed to never crash, no matter what inputs you give it, the only way it can possibly crash is if you send inputs that your functions do not know how to handle...which, believe me...content designers will try to do. So assuming the functions you expose to GDExpr 
+10. Safe - It should be impossible for a scripting language to crash the application. GDExpr is designed to never crash, no matter what inputs you give it, the only way it can possibly crash is if you send inputs that your functions do not know how to handle...which, believe me...content designers will try to do. So assuming the functions you expose to GDExpr don't have any undefined behavior when the incorrect type is passed into them, GDExpr is safe and can't crash. 
 
 11. Fast Execution - Content designers WILL be writing some of the most horribly optimized code (that somehow works) your eyes have ever seen, there is no way around this. GDExpr should be fast enough, it's difficult to benchmark how fast GDExpr is...there is more info on performance later in the readme.
 
