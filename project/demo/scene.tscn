@@ -4,3 +4,5 @@
 
 [node name="Scene" type="Node"]
 script = ExtResource("1_4gyvc")
+
+[node name="GDExprExampleNode" type="GDExprExampleNode" parent="."]

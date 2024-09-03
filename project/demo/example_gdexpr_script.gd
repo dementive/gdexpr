@@ -19,8 +19,6 @@ func run() -> void:
 # So always just return an int or some kind of number.
 # All functions declared in a gdexpr script will be available in gdexpr at runtime.
 func do_thing() -> int:
-	for i in range(50):
-		50 * 50
 	return 1
 
 

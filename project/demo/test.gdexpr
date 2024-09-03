@@ -148,7 +148,7 @@ do_thing_with_array(var_array)
 # Note that because of how includes are done you can declare variables that the included file's text will use.
 # Also note that circular includes (including a file in a file that includes that file) are not allowed.
 # Just like variables, includes must be the only declaration on the line they are found on.
-include scripts/test_include.gdexpr
+include demo/test_include.gdexpr
 
 # You can use variables declared inside included files.
 test_included_variable + 7
@@ -213,6 +213,7 @@ if test_repeat_int < test_repeat_int_2
 	9000 + 1
 endif
 
+2 * 2
 # Use the "repeat X" keyword where X is an integer number of times to repeat the current expression and break into a new expression once done.
 # This block will compile to: ["2*2", "2*2"]. Which is 2 expressions that equal 4.
 repeat 2

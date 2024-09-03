@@ -20,3 +20,4 @@ linux.release.rv64 = "bin/libgdexpr.linux.release.rv64.so"
 
 GDExpr = "res://gfx/editor_icons/GDExpr.svg"
 BaseGDExprScript = "res://gfx/editor_icons/GDExpr.svg"
+GDExprExampleScript = "res://gfx/editor_icons/GDExpr.svg"

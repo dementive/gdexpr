@@ -40,10 +40,10 @@ using namespace godot;
 namespace gdexpr {
 
 // NOTE: Uncomment this if debugging the compiler, it will compile with debugging and timing logging.
-#define GDEXPR_COMPILER_DEBUG
+//#define GDEXPR_COMPILER_DEBUG
 
 // Uncomment this to enable logging when debugging the comptime parts of the compiler.
-#define GDEXPR_COMPTIME_DEBUG
+//#define GDEXPR_COMPTIME_DEBUG
 
 // Functionality that needs to be shared between the runtime and the compiler so these functions can be run at either run time or comptime.
 class GDExprBase : public RefCounted {
@@ -540,7 +540,7 @@ private:
 	PackedStringArray compile_file(String file_path) {
 #ifdef GDEXPR_COMPILER_DEBUG
 		PackedStringArray arr = compile(parse_file(file_path));
-		UtilityFunctions::print("GDExpr compiled expressions: ", arr);
+		//UtilityFunctions::print("GDExpr compiled expressions: ", arr);
 		return arr;
 #else
 		return compile(parse_file(file_path));
