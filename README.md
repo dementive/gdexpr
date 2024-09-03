@@ -142,6 +142,8 @@ GDscript called the 10 million functions in 0.7-0.9 seconds while GDExpr called 
 
 For me this is way faster than I will ever need it to be...being able to make millions of function calls in microseconds will likely be more than enough for your application too. So I think the benefits gained from the int convenience and ease of use greatly outweighs the performance hit.
 
+Additionally if you write mostly comptime code the runtime cost can be greatly reduced if you also precompile.
+
 ### Contributing
 
 GDExpr uses the MIT license and contributions are highly encouraged...seriously...please help me...I have only been using C++ seriously for like 2 months, I've never made a compiler before or any kind of scripting language so my code might not be the best, it's amazing that it works as well as it does.
@@ -150,7 +152,9 @@ Feel free to open up issues on github if you want any new features, find bugs, o
 
 If you are writing any code you'll need to setup a few things first to get your dev environment right:
 
-First you will need to install [pre-commit](https://pre-commit.com/). I am using pre-commit for a lot of things, it currently lints and formats all of the C++, GDScript, and Scons (python) files. This ensures that all code commited is consitently styled and it most likely still works if it passed the lints. This way I never have to worry about how im writing my code I just let the formatter do it for me and it's also impossible to commit code that breaks the linters.
+First open up an issue to discuss your changes, this project is very opinionated. So be sure to discuss potential changes first to make sure they align with the projects goals.
+
+Then you will need to install [pre-commit](https://pre-commit.com/). I am using pre-commit for a lot of things, it currently lints and formats all of the C++, GDScript, and Scons (python) files. This ensures that all code commited is consitently styled and it most likely still works if it passed the lints. This way I never have to worry about how im writing my code I just let the formatter do it for me and it's also impossible to commit code that breaks the linters.
 
 To install pre-commit on your system just run `sudo pacman -Ss pre-commit` (or whatever it is in your package manager).
 
