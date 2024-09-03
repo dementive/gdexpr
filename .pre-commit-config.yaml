@@ -8,8 +8,8 @@ repos:
   - repo: https://github.com/Scony/godot-gdscript-toolkit
     rev: 4.2.2
     hooks:
-      # - id: gdlint
-      #   additional_dependencies: [setuptools]
+      - id: gdlint
+        additional_dependencies: [setuptools]
       - id: gdformat
         additional_dependencies: [setuptools]
   - repo: local
