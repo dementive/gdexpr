@@ -3,8 +3,8 @@
 extends BaseGDExprScript  # Note that you must inherit from BaseGDExprScript.
 class_name ExampleGDExprScript
 
-func run() -> void:
 
+func run() -> void:
 	var expression_inputs: Array = Array()
 
 	var script_results: Array = GDExpr.execute_file(

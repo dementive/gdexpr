@@ -129,7 +129,7 @@ public:
 	// TODO - wrap @GlobalScope functions that return void , like print(), so they return an int.
 	// This will make it possible to evaluate these functions in a single expression instead of having to break into a new expression, which has a lot of runtime overhead.
 	// The problem is if any function returns void and then the "+" operator is used to concat them into the same expression the expression will always return this:
-	// ERROR: Invalid operands to operator + Nil and Nil. 
+	// ERROR: Invalid operands to operator + Nil and Nil.
 	// Nil can't be added but if these returned ints it would be possible to add them, allowing for faster runtime expr execution.
 
 	// int gde_log(String string_to_print) {
@@ -242,7 +242,7 @@ private:
 
 	String check_for_comptime_vars(String var_token) {
 		Array comptime_vars_keys = comptime_variables.keys();
-		comptime_vars_keys.sort_custom(Callable(this, "sort_by_longest"));  // TODO OPTIMIZE - is it possible/faster to sort at insertion time???
+		comptime_vars_keys.sort_custom(Callable(this, "sort_by_longest")); // TODO OPTIMIZE - is it possible/faster to sort at insertion time???
 
 		for (int i = 0; i < comptime_vars_keys.size(); ++i) {
 			String variable = comptime_vars_keys[i];

@@ -1,8 +1,8 @@
 #ifndef GDExprTest_H
 #define GDExprTest_H
 
-#include "godot_cpp/classes/node.hpp"
 #include "godot_cpp/classes/engine.hpp"
+#include "godot_cpp/classes/node.hpp"
 
 #include "GDExpr.hpp"
 
@@ -60,11 +60,9 @@ protected:
 public:
 	GDExprExampleNode() {}
 
-	void _ready() override {
-		test_gdexpr();
-	}
+	void _ready() override { test_gdexpr(); }
 };
 
-}
+} //namespace gdexpr
 
 #endif

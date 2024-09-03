@@ -1,5 +1,6 @@
 extends Node
 
+
 # Call the example gdexpr script
 func _ready() -> void:
 	var example_script_context = preload("res://demo/example_gdexpr_script.gd").new()
