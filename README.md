@@ -59,17 +59,12 @@ GDExpr can be run as a JIT compiler to compile and execute code at runtime, so i
 
 GDExpr is a [structured](https://en.wikipedia.org/wiki/Structured_program_theorem) language and doesn't even have any non-structural procedures (such as function declarations or goto statements) because you don't actually need them. This means the control flow of any GDExpr program will always be a straight line from the top of the script to the bottom, it is impossible to jump to other sections of code that are not the next line to be executed, this is by design.
 
-Unlike most sane languages that compile to bytecode or machine code GDExpr instead compiles to Godot expressions. There are a lot of advantages to this approach, but there are also a few downsides.
+Unlike most sane languages that compile to byte code or machine code GDExpr instead compiles to Godot expressions. There are a lot of advantages to this approach, but there are also a few downsides.
 
 The killer feature of Godot expressions that made me want to compile to them is their ability to call any @GlobalScope functions or any function passed in on a object pointer.
 
 
 All you have to do is write 1 line of code to bind the function in C++. In GDscript you don't have to write any bindings at all, the functions bind automatically!
-This makes your C++ code considerably simpler than most other scripting solutions would.
-Compare this to creating function bindings from C->Lua: https://chsasank.com/lua-c-wrapping.html
-Additionally Godot expressions natively support every Variant type and all operations on them out of the box, which means you can do pretty much anything with any type.
-
-
 This makes your C++ code considerably simpler than most other scripting solutions would...
 Compare this to creating function bindings from C->Lua: https://chsasank.com/lua-c-wrapping.html
 
@@ -97,7 +92,7 @@ GDExpr is not meant to be the main language you use to develop your game, it is 
 
 Modern games are often developed using 2 different programming languages. A low level language to implement all the functionality and a much simpler scripting language to define the functionality.  Often during development tasks are delegated to the scripting language, and can be assigned to Content Designers rather than Programmers. It also makes the parts of your game implemented with the scripting language significantly easier to work since the scripts are generally much simpler than your actual game code. Tim Cain can explain it much better than I can: https://www.youtube.com/watch?v=ljnaL7N5qtw
 
-In Godot the main scripting language is GDscript. I think this is very difficult to work with from a C++ perspective. I am writing my game entirely with GDExtension C++, using GDscript as the main scripting language, in this context feels awkward, due to the way Godot scripts must be tied to a node in the scene tree.
+In Godot the main scripting language is GDscript. I am writing my game entirely with GDExtension C++, using GDscript as the main scripting language, in this context feels awkward, due to the way Godot scripts must be tied to a node in the scene tree.
 
 So what are my exact requirements for a scripting language?
 
@@ -139,7 +134,7 @@ Additionally if you write mostly comptime code the runtime cost can be greatly r
 
 ### Godot expression limitations
 Compiling to Godot expressions has a lot of fun things to work around that a normal compiler would never have to worry about.
-For example, the only possible way to implement if statements and loops was by doing it at compile time and adding a "comptime" keyword that works kind of like Zig comptime(link).
+For example, the only possible way to implement if statements and loops was by doing it at compile time and adding a "comptime" keyword that works kind of like [Zig comptime](https://ziglang.org/documentation/0.13.0/#comptime).
 I would really prefer to not have to implement comptime because it is a complex concept for scripting language syntax but there is actually no other possible way to do ifs or loops that I could think of.
 
 
