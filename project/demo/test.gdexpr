@@ -92,9 +92,6 @@ wow_cool_variable + this_is_a_variable + wow_cool_variable + wow_cool_variable +
 # All variables are mutable
 var func_variable = func_variable + this_is_a_variable
 
-# This will not work though, you must use the "var" keyword when changing or setting the value of a variable.
-# func_variable = func_variable + this_is_a_variable
-
 ---
 
 # Test mutable var
@@ -193,7 +190,7 @@ comptime var test_repeat_int = 2
 comptime var test_repeat_int_2 = test_repeat_int + 1
 comptime var test_comptime_function_call = do_thing() + 1
 
-# This is what if statements would look like...if they worked. If statements are theoretically possible to do but I haven't figured out the implementation yet :(
+# This is what if statements look like
 if Vector2(0, 0) < Vector2(1, 1) and Vector2(1, 1) < Vector2(2, 2)
 	900 + 900
 	+ 1 + 1
