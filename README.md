@@ -122,7 +122,7 @@ GDExpr fulfills all of these requirements.
 
 ### Documentation
 
-For a full overview of the GDExpr syntax and usage see the documentation: LINK HERE!
+For a full overview of the GDExpr syntax and usage see the documentation: https://github.com/dementive/gdexpr/wiki
 
 ### Performance
 
@@ -146,6 +146,8 @@ This isn't something the compiler can fix either, it can help mitigate some of t
 GDExpr uses the MIT license and contributions are highly encouraged.
 
 Feel free to open up issues on github if you want any new features or find bugs. I don't want to add a ton of new features to the language in my opinion it is mostly complete but any suggestions are still welcome.
+
+There are a few things marked as TODO, see here: https://github.com/dementive/gdexpr/wiki/TODO
 
 Before making PR's, open up an issue to discuss your changes, this project is very opinionated. So be sure to discuss potential changes first to make sure they align with the projects goals.
 
