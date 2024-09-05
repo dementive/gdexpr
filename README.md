@@ -48,7 +48,9 @@ hello_gdexpr() # Call `hello_gdexpr` on the script object instance.
 
 ### Installing
 
-Installing from the godot asset marketplace is the easiest way.
+Installing from the godot asset marketplace is the easiest way:
+
+https://godotengine.org/asset-library/asset/3306
 
 ### What is GDExpr?
 
