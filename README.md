@@ -175,6 +175,8 @@ You can test if the hooks were correctly installed by running: `pre-commit run -
 
 I recommend setting up [Pyston](https://docs.godotengine.org/en/stable/contributing/development/compiling/compiling_for_linuxbsd.html#using-pyston-for-faster-development) with a `pyston-scons` alias to make compiling faster. If you don't want to due this you can still just use `scons`.
 
+Before compiling you'll need to initialize the submodules using: `git submodule update --init --recursive`
+
 To compile use this command:
 `pyston-scons target=template_debug debug_symbols=yes dev_build=yes optimize=debug symbols_visibility=visible`
 

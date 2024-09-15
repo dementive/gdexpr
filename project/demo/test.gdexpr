@@ -269,3 +269,30 @@ if 0 != 0
 	bail
 else
 endif
+
+
+# Multiline declarations are supported
+Vector3(
+	1,
+	1,
+	1
+)
+
+---
+
+# Multiline declarations work with variables but have some quirks.
+# The start of the multiline declaration MUST be a variable declaration line that ENDS with "("
+# The end of the multiline declaration MUST be a line that STARTS with ")"
+
+var test_multi_line_declaration_var = Vector3(
+	1,
+	1,
+	1
+)
+
+var test_another_multi_line_declaration_var = Vector3(
+	2, 2,
+	2
+)
+
+test_multi_line_declaration_var + Vector3(1,1,1) + test_another_multi_line_declaration_var

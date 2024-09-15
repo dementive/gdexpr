@@ -195,6 +195,9 @@ private:
 	Dictionary comptime_variables;
 	HashSet<String> current_includes;
 	String file_to_compile;
+	String current_variable_name;
+	String current_variable_value;
+	bool is_inside_multiline_declaration = false;
 	bool is_inside_if_statement = false;
 	bool is_inside_else_statement = false;
 	bool if_condition_passed = false;
@@ -268,6 +271,11 @@ private:
 	void preprocess_variables(PackedStringArray &line_tokens, PackedStringArray &expression_tokens) {
 		String variable_name = line_tokens[1];
 		String variable_value;
+
+		if (line_tokens[line_tokens.size() - 1].ends_with("(")) {
+			is_inside_multiline_declaration = true;
+		}
+
 		for (int j = 3; j < line_tokens.size(); ++j) {
 			variable_value += line_tokens[j] + " ";
 		}
@@ -281,11 +289,16 @@ private:
 		variables.append(variable_name);
 		variables.sort_custom<SortByLongest>(); // TODO OPTIMIZE - is it possible/faster to sort at insertion time???
 
-		String var_token = vformat("set_var(\"%s\", %s)+", variable_name, variable_value);
-		var_token = check_for_comptime_vars(var_token);
+		if (!is_inside_multiline_declaration) {
+			String var_token = vformat("set_var(\"%s\", %s)+", variable_name, variable_value);
+			var_token = check_for_comptime_vars(var_token);
 
-		expression_tokens.append(var_token);
-		line_tokens.append("---");
+			expression_tokens.append(var_token);
+			line_tokens.append("---");
+		} else {
+			current_variable_name = variable_name;
+			current_variable_value = variable_value;
+		}
 	}
 
 	void reset_to_default_state() {
@@ -338,8 +351,8 @@ private:
 			}
 
 #ifdef GDEXPR_COMPILER_DEBUG
-			//UtilityFunctions::print("EXPR TO PARSE: ", expression_to_parse);
-			//UtilityFunctions::print("EXPR RESULT: ", result);
+			UtilityFunctions::print("EXPR TO PARSE: ", expression_to_parse);
+			UtilityFunctions::print("EXPR RESULT: ", result);
 #endif
 
 			results.push_back(result);
@@ -579,6 +592,21 @@ private:
 				}
 			}
 
+			// End of multi-line declarations
+			if (line_tokens[0] == ")" and is_inside_multiline_declaration) {
+				String var_token = vformat("set_var(\"%s\", %s)", current_variable_name, current_variable_value) + ")+";
+				var_token = check_for_comptime_vars(var_token);
+
+				is_inside_multiline_declaration = false;
+				expression_tokens.append(var_token);
+				String expr = String().join(expression_tokens);
+				if (!expr.is_empty()) {
+					compiled_expressions.append(expr.trim_suffix("+"));
+					expression_tokens.clear();
+					continue;
+				}
+			}
+
 			// No need to iterate over tokens if there are no variables.
 			if (variables.size() < 1) {
 				expression_tokens.append(String().join(line_tokens));
@@ -597,8 +625,14 @@ private:
 				line_tokens[j] = check_for_comptime_vars(line_tokens[j]);
 
 				// Add processed tokens
-				if (line_tokens[j] != "")
+				if (line_tokens[j] != "" and !is_inside_multiline_declaration)
 					expression_tokens.append(line_tokens[j]);
+			}
+
+			// If inside multi-line declaration, add text to the variable value.
+			if (is_inside_multiline_declaration) {
+				current_variable_value += String().join(line_tokens);
+				continue;
 			}
 		}
 
@@ -623,7 +657,7 @@ private:
 	PackedStringArray compile_file(String file_path) {
 #ifdef GDEXPR_COMPILER_DEBUG
 		PackedStringArray arr = compile(parse_file(file_path));
-		//UtilityFunctions::print("GDExpr compiled expressions: ", arr);
+		UtilityFunctions::print("GDExpr compiled expressions: ", arr);
 		return arr;
 #else
 		return compile(parse_file(file_path));
