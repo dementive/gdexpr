@@ -82,10 +82,10 @@ using namespace godot;
 namespace gdexpr {
 
 // NOTE: Uncomment this if debugging the compiler, it will compile with debugging and timing logging.
-//#define GDEXPR_COMPILER_DEBUG
+#define GDEXPR_COMPILER_DEBUG
 
 // NOTE: Uncomment this to enable logging when debugging the comptime parts of the compiler.
-//#define GDEXPR_COMPTIME_DEBUG
+#define GDEXPR_COMPTIME_DEBUG
 
 // Measure execution time of m_code with a label m_thing_to_time in microseconds and print the result.
 #define TIME_MICRO(m_thing_to_time, m_code)                                                                                                                                   \
@@ -229,16 +229,15 @@ private:
 	Expression *expression = nullptr;
 	Ref<BaseGDExprScript> base_instance = nullptr;
 	Vector<String> variables;
-	// TODO OPTIMIZE - hash map is a shitty data structure for vars...cache misses galore...find something else with O(1)ish access...same with the one in the runtime.
 	Dictionary comptime_variables;
 	HashSet<String> current_includes;
 	String file_to_compile;
 	String current_variable_name;
 	String current_variable_value;
+	Array conditional_stack;
 	bool is_inside_multiline_declaration = false;
 	bool is_inside_if_statement = false;
 	bool is_inside_else_statement = false;
-	bool if_condition_passed = false;
 	Array expression_inputs;
 
 	String parse_directory(String dir_path) {
@@ -458,21 +457,14 @@ private:
 				}
 			}
 
-			// TODO - This works...somehow...but it doesn't allow for nested if statments not sure how to refactor it to do that...
-			if (is_inside_if_statement and !if_condition_passed) {
-				if (line_tokens[0] != "else") {
+			if (is_inside_if_statement and !conditional_stack.front()) {
+				if (line_tokens[0] != "else" or conditional_stack.size() > 0)
 					continue;
-				} else {
-					goto else_statement;
-				}
 			}
 
-			if (is_inside_else_statement and if_condition_passed) {
-				if (line_tokens[0] != "endif") {
+			if (is_inside_else_statement and conditional_stack.front()) {
+				if (line_tokens[0] != "endif")
 					continue;
-				} else {
-					goto endif_statement;
-				}
 			}
 
 			// Replace 'comptime var X = Y' with 'set_var("X", "Y")', evaluate the result, and save it in the comptime variables map.
@@ -500,14 +492,10 @@ private:
 				}
 
 				is_inside_if_statement = true;
-				if_condition = check_for_comptime_vars(if_condition);
-				if (comptime_execute(if_condition))
-					if_condition_passed = true;
-
+				conditional_stack.push_front(comptime_execute(check_for_comptime_vars(if_condition)));
 				continue;
 			}
 
-		else_statement:
 			if (line_tokens[0] == String("else")) {
 				is_inside_if_statement = false;
 				is_inside_else_statement = true;
@@ -515,11 +503,9 @@ private:
 			}
 
 			if (line_tokens[0] == String("endif")) {
-			endif_statement:
-
 				is_inside_if_statement = false;
 				is_inside_else_statement = false;
-				if_condition_passed = false;
+				conditional_stack.pop_front();
 
 				String expr = String().join(expression_tokens);
 				if (!expr.is_empty()) {
@@ -555,7 +541,7 @@ private:
 
 			// Exit the program and return all the previously compiled expressions.
 			if (line_tokens[0] == String("exit")) {
-				goto compile_end;
+				break;
 			}
 
 			// Exit the program and returns nothing.
@@ -676,7 +662,6 @@ private:
 			}
 		}
 
-	compile_end:
 		if (!expression_tokens.is_empty())
 			compiled_expressions.append(String().join(expression_tokens).trim_suffix("+"));
 		return compiled_expressions;
