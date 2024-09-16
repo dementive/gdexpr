@@ -167,6 +167,44 @@ struct SortByLongest {
 	bool operator()(const String &a, const String &b) const { return a.length() > b.length(); }
 };
 
+_ALWAYS_INLINE_ PackedStringArray whitespace_split(const String &p_string, const char *p_splitter) {
+	PackedStringArray ret;
+	bool inside_quote = false;
+	bool quote_type = false; // false for single quote, true for double quote
+	String current_word;
+
+	for (int i = 0; i < p_string.length(); i++) {
+		if (p_string[i] == '"' && !inside_quote) {
+			inside_quote = true;
+			quote_type = true;
+			current_word += p_string[i];
+		} else if (p_string[i] == '"' && inside_quote && quote_type) {
+			inside_quote = false;
+			current_word += p_string[i];
+		} else if (p_string[i] == '\'' && !inside_quote) {
+			inside_quote = true;
+			quote_type = false;
+			current_word += p_string[i];
+		} else if (p_string[i] == '\'' && inside_quote && !quote_type) {
+			inside_quote = false;
+			current_word += p_string[i];
+		} else if (p_string[i] == *p_splitter && !inside_quote) {
+			if (!current_word.is_empty()) {
+				ret.push_back(current_word);
+				current_word = "";
+			}
+		} else {
+			current_word += p_string[i];
+		}
+	}
+
+	if (!current_word.is_empty()) {
+		ret.push_back(current_word);
+	}
+
+	return ret;
+}
+
 class GDExpr : public GDExprBase {
 	GDCLASS(GDExpr, GDExprBase)
 
@@ -351,8 +389,8 @@ private:
 			}
 
 #ifdef GDEXPR_COMPILER_DEBUG
-			UtilityFunctions::print("EXPR TO PARSE: ", expression_to_parse);
-			UtilityFunctions::print("EXPR RESULT: ", result);
+			//UtilityFunctions::print("EXPR TO PARSE: ", expression_to_parse);
+			//UtilityFunctions::print("EXPR RESULT: ", result);
 #endif
 
 			results.push_back(result);
@@ -391,7 +429,9 @@ private:
 
 			// Split by white space
 			line = line.strip_edges();
-			PackedStringArray line_tokens = line.split(" ");
+			PackedStringArray line_tokens = whitespace_split(line, " ");
+			if (line_tokens.is_empty())
+				continue;
 
 			// Simple 1 line C style object-like macros
 			if (line_tokens[0] == String("define")) {
@@ -657,7 +697,7 @@ private:
 	PackedStringArray compile_file(String file_path) {
 #ifdef GDEXPR_COMPILER_DEBUG
 		PackedStringArray arr = compile(parse_file(file_path));
-		UtilityFunctions::print("GDExpr compiled expressions: ", arr);
+		// UtilityFunctions::print("GDExpr compiled expressions: ", arr);
 		return arr;
 #else
 		return compile(parse_file(file_path));

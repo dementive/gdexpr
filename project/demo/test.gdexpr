@@ -243,7 +243,7 @@ if test_repeat_int < test_repeat_int_2
 	repeat +test_repeat_int
 endif
 
-print("HeyMom")
+print("Hello World!")
 ---
 prints("Hello", "from", "GDExpr!")
 ---
@@ -296,3 +296,11 @@ var test_another_multi_line_declaration_var = Vector3(
 )
 
 test_multi_line_declaration_var + Vector3(1,1,1) + test_another_multi_line_declaration_var
+
+# Test whitespace in quotes and escape characters for inner quotes.
+---
+print("Hello World!")
+---
+print('"Hello" \'Mom\'!')
+---
+print("'Hello' 		\"Mother\"!")
