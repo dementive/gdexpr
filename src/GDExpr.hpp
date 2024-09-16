@@ -236,8 +236,7 @@ private:
 	String current_variable_value;
 	Array conditional_stack;
 	bool is_inside_multiline_declaration = false;
-	bool is_inside_if_statement = false;
-	bool is_inside_else_statement = false;
+	bool is_inside_condition = false;
 	Array expression_inputs;
 
 	String parse_directory(String dir_path) {
@@ -457,20 +456,15 @@ private:
 				}
 			}
 
-			if (is_inside_if_statement and !conditional_stack.front()) {
-				if (line_tokens[0] != "else" or conditional_stack.size() > 0)
-					continue;
-			}
-
-			if (is_inside_else_statement and conditional_stack.front()) {
-				if (line_tokens[0] != "endif")
-					continue;
-			}
-
 			// Replace 'comptime var X = Y' with 'set_var("X", "Y")', evaluate the result, and save it in the comptime variables map.
 			if (line_tokens[0] == String("comptime") and line_tokens.size() >= 5) {
 				comptime_variables[line_tokens[2]] = comptime_execute(get_comptime_var_value(line_tokens));
 				continue;
+			}
+
+			if (is_inside_condition and !conditional_stack.front()) {
+				if (line_tokens[0] != "end" and conditional_stack.size() > 0)
+					continue;
 			}
 
 			// If-then-else statements
@@ -491,20 +485,13 @@ private:
 					}
 				}
 
-				is_inside_if_statement = true;
+				is_inside_condition = true;
 				conditional_stack.push_front(comptime_execute(check_for_comptime_vars(if_condition)));
 				continue;
 			}
 
-			if (line_tokens[0] == String("else")) {
-				is_inside_if_statement = false;
-				is_inside_else_statement = true;
-				continue;
-			}
-
-			if (line_tokens[0] == String("endif")) {
-				is_inside_if_statement = false;
-				is_inside_else_statement = false;
+			if (line_tokens[0] == String("end")) {
+				is_inside_condition = false;
 				conditional_stack.pop_front();
 
 				String expr = String().join(expression_tokens);

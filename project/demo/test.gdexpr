@@ -191,24 +191,30 @@ comptime var test_repeat_int_2 = test_repeat_int + 1
 comptime var test_comptime_function_call = do_thing() + 1
 
 # This is what if statements look like
-if Vector2(0, 0) < Vector2(1, 1) and Vector2(1, 1) < Vector2(2, 2)
+if 1 == 1
+	print("Hello World!")
+	if 2 == 2
+		if 3 == 3
+			print("Inside The World?")
+		end
+		print("Bye World!")
+	end
+end # The 'end' keyword must be used to close an 'if' block.
+
+if Vector2(0, 0) < Vector2(1, 1) and Vector2(1, 1) < Vector2(3, 0)
 	900 + 900
 	+ 1 + 1
 
-	# Nested conditional logic does not work!!! :(
-	# if 1 < 2
-	# 	5 + 5
-	# endif
-
-else
-	200 + 250
-endif
+	if 1 < 2
+		5 + 5
+	end
+end
 
 # comptime variables can be used in if statement conditions!
 # It is very important to note that ONLY variables marked with the "comptime" keyword can be used in if statement conditions.
 if test_repeat_int < test_repeat_int_2
 	9000 + 1
-endif
+end
 
 2 * 2
 # Use the "repeat X" keyword where X is an integer number of times to repeat the current expression and break into a new expression once done.
@@ -241,7 +247,7 @@ if test_repeat_int < test_repeat_int_2
 
 	# Repeat statments can be used inside of if statments with comptime variables!
 	repeat +test_repeat_int
-endif
+end
 
 print("Hello World!")
 ---
@@ -257,8 +263,7 @@ if 1 != 1
 
 	push_error(error_string(48))
 	exit
-else # this else needs to be here after "exit"...not really sure why...
-endif
+end
 
 if 0 != 0
 	# If the fabric of reality seems to be ripping apart the "bail" keyword can be used to terminate execution of the program.
@@ -267,8 +272,7 @@ if 0 != 0
 
 	push_warning(test_repeat_int) # this will not get executed!
 	bail
-else
-endif
+end
 
 
 # Multiline declarations are supported
