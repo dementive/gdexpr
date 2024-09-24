@@ -338,7 +338,13 @@ private:
 	}
 
 	void reset_to_default_state() {
-		//base_instance = nullptr; // is this needed??? need to test lol
+		file_to_compile = "";
+		current_variable_name = "";
+		current_variable_value = "";
+		is_inside_multiline_declaration = false;
+		is_inside_condition = false;
+
+		conditional_stack.clear();
 		comptime_variables.clear();
 		variables.clear();
 		current_includes.clear();
