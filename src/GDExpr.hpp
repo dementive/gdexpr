@@ -82,10 +82,11 @@ using namespace godot;
 namespace gdexpr {
 
 // NOTE: Uncomment this if debugging the compiler, it will compile with debugging and timing logging.
-#define GDEXPR_COMPILER_DEBUG
+//#define GDEXPR_COMPILER_DEBUG
+//#define GDEXPR_COMPILER_TIMING_DEBUG
 
 // NOTE: Uncomment this to enable logging when debugging the comptime parts of the compiler.
-#define GDEXPR_COMPTIME_DEBUG
+//#define GDEXPR_COMPTIME_DEBUG
 
 // Measure execution time of m_code with a label m_thing_to_time in microseconds and print the result.
 #define TIME_MICRO(m_thing_to_time, m_code)                                                                                                                                   \
@@ -172,29 +173,36 @@ _ALWAYS_INLINE_ PackedStringArray whitespace_split(const String &p_string, const
 	bool inside_quote = false;
 	bool quote_type = false; // false for single quote, true for double quote
 	String current_word;
+	bool comment_started = false;
 
 	for (int i = 0; i < p_string.length(); i++) {
-		if (p_string[i] == '"' && !inside_quote) {
-			inside_quote = true;
-			quote_type = true;
-			current_word += p_string[i];
-		} else if (p_string[i] == '"' && inside_quote && quote_type) {
-			inside_quote = false;
-			current_word += p_string[i];
-		} else if (p_string[i] == '\'' && !inside_quote) {
-			inside_quote = true;
-			quote_type = false;
-			current_word += p_string[i];
-		} else if (p_string[i] == '\'' && inside_quote && !quote_type) {
-			inside_quote = false;
-			current_word += p_string[i];
-		} else if (p_string[i] == *p_splitter && !inside_quote) {
-			if (!current_word.is_empty()) {
-				ret.push_back(current_word);
-				current_word = "";
+		if (p_string[i] == '#' && !inside_quote && !comment_started) {
+			comment_started = true;
+		} else if (p_string[i] == '\n' && comment_started) {
+			comment_started = false;
+		} else if (!comment_started) {
+			if (p_string[i] == '"' && !inside_quote) {
+				inside_quote = true;
+				quote_type = true;
+				current_word += p_string[i];
+			} else if (p_string[i] == '"' && inside_quote && quote_type) {
+				inside_quote = false;
+				current_word += p_string[i];
+			} else if (p_string[i] == '\'' && !inside_quote) {
+				inside_quote = true;
+				quote_type = false;
+				current_word += p_string[i];
+			} else if (p_string[i] == '\'' && inside_quote && !quote_type) {
+				inside_quote = false;
+				current_word += p_string[i];
+			} else if (p_string[i] == *p_splitter && !inside_quote) {
+				if (!current_word.is_empty()) {
+					ret.push_back(current_word);
+					current_word = "";
+				}
+			} else {
+				current_word += p_string[i];
 			}
-		} else {
-			current_word += p_string[i];
 		}
 	}
 
@@ -203,6 +211,53 @@ _ALWAYS_INLINE_ PackedStringArray whitespace_split(const String &p_string, const
 	}
 
 	return ret;
+}
+
+// Same as the above function but returns a String. Used in the config script compiler because it is considerably faster than joining PackedStringArrays
+// TODO - merge these 2 functions using a template...they do the same thing.
+_ALWAYS_INLINE_ String whitespace_split_string(const String &p_string, const char *p_splitter) {
+	String result;
+	bool inside_quote = false;
+	bool quote_type = false; // false for single quote, true for double quote
+	String current_word;
+	bool comment_started = false;
+
+	for (int i = 0; i < p_string.length(); i++) {
+		if (p_string[i] == '#' && !inside_quote && !comment_started) {
+			comment_started = true;
+		} else if (p_string[i] == '\n' && comment_started) {
+			comment_started = false;
+		} else if (!comment_started) {
+			if (p_string[i] == '"' && !inside_quote) {
+				inside_quote = true;
+				quote_type = true;
+				current_word += p_string[i];
+			} else if (p_string[i] == '"' && inside_quote && quote_type) {
+				inside_quote = false;
+				current_word += p_string[i];
+			} else if (p_string[i] == '\'' && !inside_quote) {
+				inside_quote = true;
+				quote_type = false;
+				current_word += p_string[i];
+			} else if (p_string[i] == '\'' && inside_quote && !quote_type) {
+				inside_quote = false;
+				current_word += p_string[i];
+			} else if (p_string[i] == *p_splitter && !inside_quote) {
+				if (!current_word.is_empty()) {
+					result += current_word + " ";
+					current_word = "";
+				}
+			} else {
+				current_word += p_string[i];
+			}
+		}
+	}
+
+	if (!current_word.is_empty()) {
+		result += current_word;
+	}
+
+	return result.strip_edges();
 }
 
 class GDExpr : public GDExprBase {
@@ -370,7 +425,7 @@ private:
 	}
 
 	Array _execute_expressions(PackedStringArray compiled_expression, String file_to_compile, bool is_running_as_interpreter) {
-#ifdef GDEXPR_COMPILER_DEBUG
+#ifdef GDEXPR_COMPILER_TIMING_DEBUG
 		TIME_START(gdexpr_execution)
 #endif
 
@@ -393,8 +448,8 @@ private:
 			}
 
 #ifdef GDEXPR_COMPILER_DEBUG
-			//UtilityFunctions::print("EXPR TO PARSE: ", expression_to_parse);
-			//UtilityFunctions::print("EXPR RESULT: ", result);
+			UtilityFunctions::print("EXPR TO PARSE: ", expression_to_parse);
+			UtilityFunctions::print("EXPR RESULT: ", result);
 #endif
 
 			results.push_back(result);
@@ -402,7 +457,7 @@ private:
 
 		reset_to_default_state();
 
-#ifdef GDEXPR_COMPILER_DEBUG
+#ifdef GDEXPR_COMPILER_TIMING_DEBUG
 		TIME_MICRO_END(gdexpr_execution)
 #endif
 		return results;
@@ -420,14 +475,46 @@ private:
 		Dictionary macro_defines;
 		Array macro_define_keys;
 		PackedStringArray lines = input_string.split("\n");
+		bool is_config_script = lines.size() > 0 and lines[0] == "@config" ? true : false;
 
-		// TODO - refactor this for loop, it sucks. Each operation should be a function to make it clearer.
+		// Stripped down version of the compiler that only has a break statement.
+		// This is ideal for use with scripts that don't use any variables or conditional logic and will be significantly faster to compile than the full language.
+		if (is_config_script) {
+			String expr_string = "";
+			for (int i = 1; i < lines.size(); ++i) {
+				String line = lines[i];
+
+				if (line.is_empty())
+					continue;
+
+				// Split by white space
+				String line_tokens = whitespace_split_string(line, " ");
+				if (line_tokens.is_empty())
+					continue;
+
+				// Break expression
+				if (line_tokens.begins_with("break") or line_tokens.begins_with("---")) {
+					if (!expr_string.is_empty()) {
+						compiled_expressions.append(expr_string);
+						expr_string = "";
+						continue;
+					}
+				}
+
+				// expression_tokens.append(String().join(line_tokens));
+				expr_string += line_tokens;
+			}
+
+			if (!expr_string.is_empty())
+				compiled_expressions.append(expr_string);
+
+			return compiled_expressions;
+		}
+
+		// Full compiler with all gdexpr features
 		for (int i = 0; i < lines.size(); ++i) {
 			String line = lines[i];
 
-			// Remove comments
-			line = line.get_slice("#", 0);
-			line = line.replace("#", "");
 			if (line.is_empty())
 				continue;
 
@@ -675,7 +762,7 @@ private:
 	PackedStringArray compile_file(String file_path) {
 #ifdef GDEXPR_COMPILER_DEBUG
 		PackedStringArray arr = compile(parse_file(file_path));
-		// UtilityFunctions::print("GDExpr compiled expressions: ", arr);
+		UtilityFunctions::print("GDExpr compiled expressions: ", arr);
 		return arr;
 #else
 		return compile(parse_file(file_path));
@@ -726,7 +813,7 @@ public:
 	Array execute(Array user_expression_inputs, Ref<BaseGDExprScript> base_expression_instance, String string_to_execute) {
 		base_instance = base_expression_instance;
 		expression_inputs = user_expression_inputs;
-#ifdef GDEXPR_COMPILER_DEBUG
+#ifdef GDEXPR_COMPILER_TIMING_DEBUG
 		TIME_MICRO(compile, PackedStringArray compiled_expression = compile(string_to_execute))
 		return _execute_expressions(compiled_expression, file_to_compile, true);
 #else
@@ -741,7 +828,7 @@ public:
 		base_instance = base_expression_instance;
 		expression_inputs = user_expression_inputs;
 		file_to_compile = user_file_to_compile;
-#ifdef GDEXPR_COMPILER_DEBUG
+#ifdef GDEXPR_COMPILER_TIMING_DEBUG
 		TIME_MICRO(compile, PackedStringArray compiled_expression = compile_file(file_to_compile))
 		return _execute_expressions(compiled_expression, file_to_compile, false);
 #else

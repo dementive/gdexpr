@@ -1,0 +1,34 @@
+@config
+# Using "@config" on the first line of the file will make this gdexpr file get compiled as a stripped down barebones version of the language.
+# This is ideal when your scripts do not need to use variables or any conditional logic and are literally just static configuration data that you still want to be able to quickly manipulate at runtime.
+# Using @config will drastically increase compile times of larger files. Although the runtime execution will remain the same speed.
+
+# When using @config all gdexpr features are disabled except for "break" and comments.
+# If you use normal gdexpr syntax other than "break" or "---" it will not work and will throw an error at runtime!
+# Note that "@config" MUST be on the first line and it MUST be the only text on the first line for the file to get compiled as a config, you can't even have comments on or before the line with @config.
+
+# All regular godot expression syntax is still valid. So any functions and any variant types can still be used in config files.
+print("Compiling GDExpr config file...")
+
+break
+
+Vector4(1, 2, 3, 4)
+
+break
+
+Vector3(
+	1,
+	2,
+	3,
+)
+
+---
+
+Vector2(
+	randi_range(0, 1),
+	randi_range(2, 3)
+)
+
+---
+
+Vector2(1,2) > Vector2(0,0) and 1 != 0

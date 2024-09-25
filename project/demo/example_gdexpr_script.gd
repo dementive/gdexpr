@@ -16,6 +16,16 @@ func run() -> void:
 		print("Result: ", i)
 
 
+func run_config() -> void:
+	var expression_inputs: Array = Array()
+
+	var script_results: Array = GDExpr.execute_file(
+		expression_inputs, self, "res://demo/test_config.gdexpr"
+	)
+	for i in script_results:
+		print("Result: ", i)
+
+
 # NOTE: Functions run in GDExpr cannot return void, they must return a Variant value of some kind.
 # If they return void when evaluated as an expression
 # they will return Variant::NIL, which will cause the expression to fail.

@@ -157,8 +157,6 @@ Before making PR's, open up an issue to discuss your changes, this project is ve
 
 First you will need to install [pre-commit](https://pre-commit.com/). I am using pre-commit for a lot of things, it currently lints and formats all of the C++, GDScript, and Scons (python) files. This ensures that all code committed is consistently styled and it most likely still works if it passed the lints. This way I never have to worry about how I'm writing my code I just let the formatter do it for me and it's also impossible to commit code that breaks the linters.
 
-Then you will need to install [pre-commit](https://pre-commit.com/). I am using pre-commit for a lot of things, it currently lints and formats all of the C++, GDScript, and Scons (python) files. This ensures that all code commited is consitently styled and it most likely still works if it passed the lints. This way I never have to worry about how im writing my code I just let the formatter do it for me and it's also impossible to commit code that breaks the linters.
-
 To install pre-commit on your system just run `sudo pacman -S pre-commit` (or whatever it is in your package manager).
 
 
@@ -173,12 +171,10 @@ You can test if the hooks were correctly installed by running: `pre-commit run -
 
 ### Compiling
 
-I recommend setting up [Pyston](https://docs.godotengine.org/en/stable/contributing/development/compiling/compiling_for_linuxbsd.html#using-pyston-for-faster-development) with a `pyston-scons` alias to make compiling faster. If you don't want to due this you can still just use `scons`.
-
 Before compiling you'll need to initialize the submodules using: `git submodule update --init --recursive`
 
 To compile use this command:
-`pyston-scons target=template_debug debug_symbols=yes dev_build=yes optimize=debug symbols_visibility=visible`
+`scons target=template_debug debug_symbols=yes dev_build=yes optimize=debug symbols_visibility=visible`
 
 This will compile in debug mode and with debug symbols that are actually readable.
 
