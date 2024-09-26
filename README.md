@@ -5,7 +5,7 @@ GDExpr is a structured dynamically typed scripting language with tight integrati
 ### Example Usage
 Executing a gdexpr file with GDscript is as simple as creating a script such as this:
 
-```
+```gdscript
 # Test GDExpr script.
 # This is an example of how to create your own GDExpr classes in gdscript.
 # All functions in this class can be called during the GDExpr runtime.
@@ -32,7 +32,7 @@ func hello_gdexpr() -> String:
 ```
 
 Then somewhere else in any gdscript you can execute the gdexpr script like this:
-```
+```gdscript
 # Call the example gdexpr script
 func _ready() -> void:
     var example_script_context = preload("res://demo/example_gdexpr_script.gd").new()
@@ -42,7 +42,7 @@ func _ready() -> void:
 
 This is what the `test.gdexpr` GDExpr file would look like to print Hello World:
 
-```
+```gdscript
 hello_gdexpr() # Call `hello_gdexpr` on the script object instance.
 ```
 
