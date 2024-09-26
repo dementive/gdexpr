@@ -73,9 +73,7 @@ GDExpr syntax allows. So the compiler has to also do a lot of really weird stuff
 #include "godot_cpp/classes/file_access.hpp"
 #include "godot_cpp/classes/time.hpp"
 #include "godot_cpp/templates/hash_set.hpp"
-#include "godot_cpp/variant/packed_string_array.hpp"
 #include "godot_cpp/variant/utility_functions.hpp"
-#include "godot_cpp/variant/variant.hpp"
 
 using namespace godot;
 
@@ -115,48 +113,24 @@ namespace gdexpr {
 	uint64_t X_##m_thing_to_time##_end = Time::get_singleton()->get_ticks_usec();                                                                                             \
 	UtilityFunctions::print("Total time taken to run ", #m_thing_to_time, ": ", ((X_##m_thing_to_time##_end - X_##m_thing_to_time##_start) / 1000000.0), " seconds");
 
-// Functionality that needs to be shared between the runtime and the compiler so these functions can be run at either run time or comptime.
-class GDExprBase : public RefCounted {
-	GDCLASS(GDExprBase, RefCounted)
-
-protected:
-	static void _bind_methods() {
-		// ClassDB::bind_method(D_METHOD("gde_log"), &GDExprBase::gde_log);
-	}
-
-public:
-	GDExprBase() {}
-
-	// TODO - wrap @GlobalScope functions that return void , like print(), so they return an int.
-	// This will make it possible to evaluate these functions in a single expression instead of having to break into a new expression, which has a lot of runtime overhead.
-	// The problem is if any function returns void and then the "+" operator is used to concat them into the same expression the expression will always return this:
-	// ERROR: Invalid operands to operator + Nil and Nil.
-	// Nil can't be added but if these returned ints it would be possible to add them, allowing for faster runtime expr execution.
-
-	// int gde_log(String string_to_print) {
-	// 	UtilityFunctions::print(string_to_print);
-	// 	return 1;
-	// }
-};
-
-// This class is essentially the GDExpr runtime, all scripts that call GDExpr must inhereit from BaseGDExprScript.
-class BaseGDExprScript : public GDExprBase {
-	GDCLASS(BaseGDExprScript, GDExprBase)
+// This class is essentially the GDExpr runtime, all scripts that call GDExpr must inhereit from GDExprScript.
+class GDExprScript : public RefCounted {
+	GDCLASS(GDExprScript, RefCounted)
 
 private:
 	Dictionary runtime_variables;
 
 protected:
 	static void _bind_methods() {
-		ClassDB::bind_method(D_METHOD("get_var"), &BaseGDExprScript::get_var);
-		ClassDB::bind_method(D_METHOD("set_var", "var_name", "var_value"), &BaseGDExprScript::set_var);
+		ClassDB::bind_method(D_METHOD("get_var"), &GDExprScript::get_var);
+		ClassDB::bind_method(D_METHOD("set_var", "var_name", "var_value"), &GDExprScript::set_var);
 	}
 
 public:
-	BaseGDExprScript() {}
+	GDExprScript() {}
 
 	// IMPORTANT NOTE: If the base_instance passed into a GDExpr expression does not have get_var, set_var and a Dictionary class variables in GDExpr will not work and will
-	// cause the expression to fail! So be sure to inherit from BaseGDExprScript.
+	// cause the expression to fail! So be sure to inherit from GDExprScript.
 	Variant get_var(String var_name) { return runtime_variables[var_name]; }
 	int set_var(String var_name, Variant var_value) {
 		runtime_variables[var_name] = var_value;
@@ -260,8 +234,8 @@ _ALWAYS_INLINE_ String whitespace_split_string(const String &p_string, const cha
 	return result.strip_edges();
 }
 
-class GDExpr : public GDExprBase {
-	GDCLASS(GDExpr, GDExprBase)
+class GDExpr : public RefCounted {
+	GDCLASS(GDExpr, RefCounted)
 
 public:
 	GDExpr() {
@@ -282,7 +256,7 @@ private:
 	static GDExpr *get_singleton();
 
 	Expression *expression = nullptr;
-	Ref<BaseGDExprScript> base_instance = nullptr;
+	Ref<GDExprScript> base_instance = nullptr;
 	Vector<String> variables;
 	Dictionary comptime_variables;
 	HashSet<String> current_includes;
@@ -299,7 +273,11 @@ private:
 		PackedStringArray files = dir->get_files();
 		String expressions;
 		for (int i = 0; i < files.size(); ++i) {
-			String expr = parse_file(files[i]);
+			String file = files[i];
+			if (file.get_extension() != "gdexpr")
+				continue;
+
+			String expr = parse_file(file);
 			if (expr.is_empty())
 				continue;
 
@@ -322,12 +300,6 @@ private:
 	}
 
 	String parse_include_file(String file_path) {
-		// TODO - This should resolve paths from loaded mods stored in user:// not just paths from res://
-		// for file conflict resolution this will have to use the exact same logic as the get_data function in jomini.py:
-		// https://github.com/dementive/JominiTools/blob/main/src/jomini.py Im not sure if this modding logic should actually be in the compiler or somewhere else though...
-		// Just hard coding to res:// for now I guess. Will need a better solution though.
-		file_path = "res://" + file_path;
-
 		Ref<FileAccess> file = FileAccess::open(file_path, FileAccess::READ);
 		ERR_FAIL_NULL_V(file, String());
 
@@ -463,12 +435,6 @@ private:
 		return results;
 	}
 
-	// TODO OPTIMIZE - This is fast on smaller programs but if there are a ton of variables and 100,000+ lines of code to compile it can get slow...
-	// At a certain arbitrary point the algorithm should switch to parallel execution if the thread spawning + lock overhead will very likely be less than just compiling.
-	// This should be fairly straightforward to do since each expression is mostly evaluated independently and there are only a few shared memory resources like macro defines
-	// and variables. Load balancing will be easy since GDExpr is structured and sequential, each chunk can compile their own expressions and then they can be inserted into
-	// compiled_expressions once each thread is done.
-	// Another optimization could be to do some garbage collection of variables but this would require a big refactor.
 	PackedStringArray compile(String input_string) {
 		PackedStringArray compiled_expressions;
 		PackedStringArray expression_tokens;
@@ -756,8 +722,7 @@ private:
 	// that the compiler doesn't handle.
 	//void sanitize() {}
 
-	// TODO - make this do something...
-	PackedStringArray _compile_directory(String dir_path) { return compile(parse_directory(dir_path)); }
+	PackedStringArray compile_directory(String dir_path) { return compile(parse_directory(dir_path)); }
 
 	PackedStringArray compile_file(String file_path) {
 #ifdef GDEXPR_COMPILER_DEBUG
@@ -775,6 +740,7 @@ protected:
 		ClassDB::bind_method(D_METHOD("execute_precompiled_expressions", "compiled_expression", "string_to_execute"), &GDExpr::execute_precompiled_expressions);
 		ClassDB::bind_method(D_METHOD("execute", "user_expression_inputs", "base_expression_instance", "string_to_execute"), &GDExpr::execute);
 		ClassDB::bind_method(D_METHOD("execute_file", "user_expression_inputs", "base_expression_instance", "user_file_to_compile"), &GDExpr::execute_file);
+		ClassDB::bind_method(D_METHOD("execute_directory", "user_expression_inputs", "base_expression_instance", "user_dir_to_compile"), &GDExpr::execute_directory);
 
 		ClassDB::bind_method(D_METHOD("sort_by_longest", "a", "b"), &GDExpr::sort_by_longest);
 	}
@@ -786,7 +752,7 @@ public:
 	// Statically compile a gdexpr file to a sequence of godot expressions but does not execute them. This works like a static compiler.
 	// If your script does not need runtime data you should always statically compile as it will completely eliminate the compile time cost when running the expressions at
 	// runtime. Returns a PackedStringArray of godot expressions that are ready for execution with the execute_precompiled_expressions function.
-	PackedStringArray static_compile(Array user_expression_inputs, Ref<BaseGDExprScript> base_expression_instance, String user_file_to_compile) {
+	PackedStringArray static_compile(Array user_expression_inputs, Ref<GDExprScript> base_expression_instance, String user_file_to_compile) {
 		base_instance = base_expression_instance;
 		expression_inputs = user_expression_inputs;
 		file_to_compile = user_file_to_compile;
@@ -810,7 +776,7 @@ public:
 
 	// Compiles a String with GDExpr code in it to a sequence of godot expressions and execute them.
 	// Returns the results of each expression executed in an Array.
-	Array execute(Array user_expression_inputs, Ref<BaseGDExprScript> base_expression_instance, String string_to_execute) {
+	Array execute(Array user_expression_inputs, Ref<GDExprScript> base_expression_instance, String string_to_execute) {
 		base_instance = base_expression_instance;
 		expression_inputs = user_expression_inputs;
 #ifdef GDEXPR_COMPILER_TIMING_DEBUG
@@ -824,7 +790,7 @@ public:
 
 	// Compile a gdexpr file to a sequence of godot expressions and execute them.
 	// Returns the results of each expression executed in an Array.
-	Array execute_file(Array user_expression_inputs, Ref<BaseGDExprScript> base_expression_instance, String user_file_to_compile) {
+	Array execute_file(Array user_expression_inputs, Ref<GDExprScript> base_expression_instance, String user_file_to_compile) {
 		base_instance = base_expression_instance;
 		expression_inputs = user_expression_inputs;
 		file_to_compile = user_file_to_compile;
@@ -833,6 +799,23 @@ public:
 		return _execute_expressions(compiled_expression, file_to_compile, false);
 #else
 		PackedStringArray compiled_expression = compile_file(file_to_compile);
+		return _execute_expressions(compiled_expression, file_to_compile, false);
+#endif
+	}
+
+	// Search a directory for gdexpr files to compile then execute them.
+	// This will process each gdexpr file in the directory
+	// So be careful not to put gdexpr files that are only meant to be used as includes in the execution directory when using this function.
+	// Returns the results of each expression executed in an Array.
+	Array execute_directory(Array user_expression_inputs, Ref<GDExprScript> base_expression_instance, String user_dir_to_compile) {
+		base_instance = base_expression_instance;
+		expression_inputs = user_expression_inputs;
+		file_to_compile = user_dir_to_compile;
+#ifdef GDEXPR_COMPILER_TIMING_DEBUG
+		TIME_MICRO(compile_directory, PackedStringArray compiled_expression = compile_directory(file_to_compile))
+		return _execute_expressions(compiled_expression, file_to_compile, false);
+#else
+		PackedStringArray compiled_expression = compile_directory(file_to_compile);
 		return _execute_expressions(compiled_expression, file_to_compile, false);
 #endif
 	}

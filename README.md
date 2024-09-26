@@ -59,7 +59,7 @@ It is written as a C++ GDExtension, in a single header file, in under 1000 lines
 
 GDExpr can be run as a JIT compiler to compile and execute code at runtime, so it allows for hot reloading and quick runtime testing. It can be used to statically compile GDExpr code to Godot expressions which can then be executed at runtime without incurring the compile time overhead.
 
-GDExpr is a [structured](https://en.wikipedia.org/wiki/Structured_program_theorem) language and doesn't even have any non-structural procedures (such as function declarations or goto statements) because you don't actually need them. This means the control flow of any GDExpr program will always be a straight line from the top of the script to the bottom, it is impossible to jump to other sections of code that are not the next line to be executed, this is by design.
+GDExpr is a [structured](https://en.wikipedia.org/wiki/Structured_program_theorem) language and doesn't even have any non-structural procedures (such as function declarations or goto statements). This means the control flow of any GDExpr program will always be a straight line from the top of the script to the bottom.
 
 Unlike most sane languages that compile to byte code or machine code GDExpr instead compiles to Godot expressions. There are a lot of advantages to this approach, but there are also a few downsides.
 

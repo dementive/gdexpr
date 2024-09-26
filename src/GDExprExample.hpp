@@ -12,9 +12,9 @@ namespace gdexpr {
 
 // Test GDExpr script.
 // This is an example of how to create your own GDExpr classes in C++ with functions that can be called during the GDExpr runtime.
-// Note that you must inherit from BaseGDExprScript.
-class GDExprExampleScript : public BaseGDExprScript {
-	GDCLASS(GDExprExampleScript, BaseGDExprScript)
+// Note that you must inherit from GDExprScript.
+class GDExprExampleScript : public GDExprScript {
+	GDCLASS(GDExprExampleScript, GDExprScript)
 
 protected:
 	static void _bind_methods() {

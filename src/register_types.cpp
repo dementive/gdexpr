@@ -17,12 +17,12 @@ void initialize_gdexpr_module(ModuleInitializationLevel p_level) {
 		return;
 	}
 
-	GDREGISTER_ABSTRACT_CLASS(GDExprBase)
-	GDREGISTER_CLASS(BaseGDExprScript)
 	GDREGISTER_CLASS(GDExpr)
-	GDREGISTER_CLASS(GDExprExampleNode)
-	GDREGISTER_CLASS(GDExprExampleScript)
+	GDREGISTER_CLASS(GDExprScript)
 	Engine::get_singleton()->register_singleton("GDExpr", memnew(GDExpr));
+
+	//GDREGISTER_CLASS(GDExprExampleNode)
+	//GDREGISTER_CLASS(GDExprExampleScript)
 }
 
 void uninitialize_gdexpr_module(ModuleInitializationLevel p_level) {

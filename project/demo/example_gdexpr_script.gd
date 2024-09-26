@@ -3,7 +3,7 @@
 # All functions in this class can be called during the GDExpr runtime.
 
 class_name ExampleGDExprScript
-extends BaseGDExprScript  # Note that you must inherit from BaseGDExprScript.
+extends GDExprScript  # Note that you must inherit from GDExprScript.
 
 
 func run() -> void:
